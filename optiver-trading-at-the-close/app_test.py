@@ -10,7 +10,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 app = Flask(__name__)
 
 #DATA_FILEPATH = os.path.join('app', 'data', 'cs-training.csv')
-MODEL_FILEPATH = os.path.join('optiver-trading-at-the-close', 'trained_pipeline.pkl')
+MODEL_FILEPATH = os.path.join('trained_pipeline.pkl')
 
 
 @app.route('/', methods=['GET'])
