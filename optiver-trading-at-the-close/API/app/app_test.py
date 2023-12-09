@@ -9,6 +9,11 @@ import os
 
 app = Flask(__name__)
 
+@app.route('/', methods=['GET'])
+def index():
+    return "Welcome to the F Flask app."
+
+
 # Load your CatBoost model
 MODEL_FILEPATH = os.path.join('models', 'usable_model.joblib')
 model = load(MODEL_FILEPATH)
