@@ -45,6 +45,7 @@ class FeatureCreator(BaseEstimator, TransformerMixin):
         data['log_ask_size'] = np.log1p(data['ask_size'])
 
         # Remove any infinite values created by feature engineering
-        data.replace([np.inf, -np.inf], np.nan, inplace=True).fillna(method='bfill', inplace=True)
+        data.replace([np.inf, -np.inf], np.nan, inplace=True)
+        
 
         return data
