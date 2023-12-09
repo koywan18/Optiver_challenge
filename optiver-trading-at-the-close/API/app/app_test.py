@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from NanHandler import NanHandlerTransformer
 from feature_creator import FeatureCreator
 from sklearn.preprocessing import StandardScaler
+from catboost import CatBoostRegressor
 import pandas as pd
 from joblib import load, dump
 import os
