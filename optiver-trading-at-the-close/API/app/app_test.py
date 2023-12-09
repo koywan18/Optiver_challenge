@@ -1,86 +1,38 @@
-import os
-
 from flask import Flask, request, jsonify
-import random
+from NanHandler import NanHandlerTransformer
 import pandas as pd
-from joblib import dump, load
-from sklearn.ensemble import GradientBoostingClassifier
-
+from joblib import load, dump
+import os
 
 app = Flask(__name__)
 
-#DATA_FILEPATH = os.path.join('app', 'data', 'cs-training.csv')
-MODEL_FILEPATH = os.path.join('trained_pipeline.pkl')
+# Load your CatBoost model
+MODEL_FILEPATH = os.path.join('models', 'usable_model.joblib')
+model = load(MODEL_FILEPATH)
 
-
-@app.route('/', methods=['GET'])
-def index():
-    return "Welcome to the Feeee Flask app."
-
-
-# 0. Random
-
-# @app.route('/predict', methods=['GET'])
-# def get_score():
-#     score = random.uniform(0, 1)
-#     return jsonify({"score": score})
-
-
-# 1.0 Univariate threshold
-
-# @app.route('/predict', methods=['GET'])
-# def get_score():
-#     debt_ratio = request.args.get('debt_ratio', default=1, type=float)
-#     return jsonify({"score": debt_ratio})
-
-
-# 1.1 Univariate threshold, batch
-
-# @app.route('/predict', methods=['POST'])
-# def get_scores():
-#     customer_infos = request.json
-
-#     scores = []
-#     for customer in customer_infos:
-#         customer_id = customer["id"]
-#         score = customer["debt_ratio"]
-#         scores.append({"id": customer_id, "score": score})
-
-#     return jsonify({"scores": scores})
-
-
-# 2. Trained model
-
-# def train_and_save_model(model_filepath):
-#     train = pd.read_csv(DATA_FILEPATH, index_col=0)
-#     train.fillna(-1, inplace=True)
-#     X = train.drop('SeriousDlqin2yrs', axis=1)
-#     y = train['SeriousDlqin2yrs']
-#     gbm = GradientBoostingClassifier()
-#     gbm.fit(X, y)
-#     dump(gbm, model_filepath)
-
-
-# @app.route('/train', methods=['GET'])
-# def train_model():
-#     try:
-#         train_and_save_model(MODEL_FILEPATH)
-#         return jsonify(({'status': 'success', 'message': 'Model successfully updated'}))
-
-#     except Exception as e:
-#         return str(e)
+data_cleaner =  NanHandlerTransformer()
 
 
 @app.route('/predict', methods=['POST'])
-def get_scores():
-    payload = request.json
-    input_df = pd.DataFrame(payload)
-    #input_df.fillna(-1, inplace=True)
+def predict():
+    content_type = request.content_type
 
-    # if not os.path.exists(MODEL_FILEPATH):
-    #     train_and_save_model(MODEL_FILEPATH)
+    if 'csv' in content_type:
+        # If the content type is CSV, read the file using Pandas
+        df = pd.read_csv(request.files.get('file'))
+    elif 'json' in content_type:
+        # If the content type is JSON, read the JSON data using Pandas
+        df = pd.read_json(request.data)
+    else:
+        return 'Content-Type not supported!'
 
-    model = load(MODEL_FILEPATH)
-    predictions = model.predict(input_df)[1]
+    #clean the data
+    df_clean = data_cleaner.transform(df)
+    # Make predictions
+    predictions = model.predict(data_cleaner)
 
-    return jsonify({'evolution': predictions})
+    # Return the predictions as JSON
+    return jsonify(predictions.tolist())
+
+if __name__ == '__main__':
+    app.run(debug=True)
