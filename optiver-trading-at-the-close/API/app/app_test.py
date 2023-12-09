@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify
 from NanHandler import NanHandlerTransformer
+from feature_creator import FeatureCreator
+from sklearn.preprocessing import StandardScaler
 import pandas as pd
 from joblib import load, dump
 import os
@@ -11,7 +13,8 @@ MODEL_FILEPATH = os.path.join('models', 'usable_model.joblib')
 model = load(MODEL_FILEPATH)
 
 data_cleaner =  NanHandlerTransformer()
-
+feature_creator = FeatureCreator()
+scaler = StandardScaler()
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -28,8 +31,10 @@ def predict():
 
     #clean the data
     df_clean = data_cleaner.transform(df)
+    #feature engineering and normalisation
+    df_clean_scaled = scaler.fit_transform(feature_creator.transform(df_clean))
     # Make predictions
-    predictions = model.predict(data_cleaner)
+    predictions = model.predict(df_clean_scaled)
 
     # Return the predictions as JSON
     return jsonify(predictions.tolist())
