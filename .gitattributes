@@ -1,1 +1,2 @@
 optiver-trading-at-the-close/train.csv filter=lfs diff=lfs merge=lfs -text
+*.so filter=lfs diff=lfs merge=lfs -text
