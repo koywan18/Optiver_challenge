@@ -17,4 +17,4 @@ EXPOSE 5000
 ENV NAME World
 
 # Run gunicorn when the container launches
-CMD ["gunicorn", "--workers", "9", "--bind", "0.0.0.0:5000", "app.app:app"]
+CMD ["gunicorn", "--workers", "9", "--bind", "0.0.0.0:5000", "app_test:app"]
