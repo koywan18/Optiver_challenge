@@ -28,8 +28,8 @@ class FeatureCreator(BaseEstimator, TransformerMixin):
         data['imbalance_ratio'] = data['imbalance_size'] / (data['matched_size'] + 1e-9)
 
         # Statistical Features
-        data['wap_mean'] = data['wap'].rolling(window=5).mean()
-        data['wap_std'] = data['wap'].rolling(window=5).std()
+        data['wap_mean'] = data['wap'].rolling(window=5, min_periods=1).mean()
+        data['wap_std'] = data['wap'].rolling(window=5, min_periods =1).std()
 
         # Relative Price Features
         data['price_vs_ma'] = data['wap'] / data['wap_mean']  # WAP relative to moving average
@@ -46,6 +46,9 @@ class FeatureCreator(BaseEstimator, TransformerMixin):
 
         # Remove any infinite values created by feature engineering
         data.replace([np.inf, -np.inf], np.nan, inplace=True)
-        
+    
+        for column in data.columns:
+            if data[column].isnull().any():
+                data[column].fillna(data[column].median(), inplace=True)
 
         return data

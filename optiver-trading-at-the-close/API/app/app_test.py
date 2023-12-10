@@ -16,6 +16,10 @@ model = load(MODEL_FILEPATH)
 data_cleaner =  NanHandlerTransformer()
 feature_creator = FeatureCreator()
 scaler = StandardScaler()
+features = ['stock_id', 'date_id', 'seconds_in_bucket', 'imbalance_size',
+       'imbalance_buy_sell_flag', 'reference_price', 'matched_size',
+       'far_price', 'near_price', 'bid_price', 'bid_size', 'ask_price',
+       'ask_size', 'wap']
 
 @app.route('/', methods=['GET'])
 def index():
@@ -30,18 +34,20 @@ def predict():
         return "Inputs must me sent under json format"
     elif 'json' in content_type:
         # If the content type is JSON, read the JSON data using Pandas
-        df = pd.DataFrame(request.json)
+        df_input = pd.DataFrame(request.json)
     else:
         return 'Content-Type not supported!'
 
+    df = df_input[features]    
     #clean the data
     df_clean = data_cleaner.transform(df)
     #feature engineering and normalisation
-    df_clean_scaled = scaler.fit_transform(feature_creator.transform(df_clean))
-    # Make predictions
+    df_clean_scaled = feature_creator.transform(df_clean)
+    
+    #return df_clean_scaled.to_json()
+    # # # Make predictions
     predictions = model.predict(df_clean_scaled)
-
-    # Return the predictions as JSON
+    # # # Return the predictions as JSON
     return jsonify({'prediction' : predictions.tolist()})
 
 if __name__ == '__main__':
