@@ -9,11 +9,6 @@ import os
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET'])
-def index():
-    return "Welcome to the F Flask app."
-
-
 # Load your CatBoost model
 MODEL_FILEPATH = os.path.join('models', 'usable_model.joblib')
 model = load(MODEL_FILEPATH)
@@ -22,16 +17,20 @@ data_cleaner =  NanHandlerTransformer()
 feature_creator = FeatureCreator()
 scaler = StandardScaler()
 
+@app.route('/', methods=['GET'])
+def index():
+    return "Welcome to the F Flask app."
+
 @app.route('/predict', methods=['POST'])
 def predict():
     content_type = request.content_type
 
     if 'csv' in content_type:
         # If the content type is CSV, read the file using Pandas
-        df = pd.read_csv(request.files.get('file'))
+        return "Inputs must me sent under json format"
     elif 'json' in content_type:
         # If the content type is JSON, read the JSON data using Pandas
-        df = pd.read_json(request.data)
+        df = pd.DataFrame(request.json)
     else:
         return 'Content-Type not supported!'
 
@@ -43,7 +42,7 @@ def predict():
     predictions = model.predict(df_clean_scaled)
 
     # Return the predictions as JSON
-    return jsonify(predictions.tolist())
+    return jsonify({'prediction' : predictions.tolist()})
 
 if __name__ == '__main__':
     app.run(debug=True)
