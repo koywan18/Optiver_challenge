@@ -19,7 +19,7 @@ scaler = StandardScaler()
 
 @app.route('/', methods=['GET'])
 def index():
-    return "Welcome to the F Flask app."
+    return "Welcome to the Felix Flask app."
 
 @app.route('/predict', methods=['POST'])
 def predict():
