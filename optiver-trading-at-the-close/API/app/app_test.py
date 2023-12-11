@@ -58,7 +58,10 @@ def predict():
     
     df_input = df_input.applymap(convert_to_num_or_nan)
 
-    df = df_input[features]    
+    df = df_input[features]
+    if df.shape[1] != len(features):
+        missing_columns = len(features) - df.shape[1]
+        return f'{missing_columns} columns are missing in your input'    
     #clean the data
     df_clean = data_cleaner.transform(df)
 
