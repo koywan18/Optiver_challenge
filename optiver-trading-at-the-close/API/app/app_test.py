@@ -24,13 +24,19 @@ features = ['stock_id', 'date_id', 'seconds_in_bucket', 'imbalance_size',
        'far_price', 'near_price', 'bid_price', 'bid_size', 'ask_price',
        'ask_size', 'wap']
 
+def check_missing_features(df_input, features):
+    missing_features = [feature for feature in features if feature not in df_input.columns]
+    if missing_features:
+        return False, f"The following features are missing : {', '.join(missing_features)}"
+    return True, "All necessary features were provided"
+
+
 def convert_to_num_or_nan(cell):
     try:
         # Essayer de convertir en float
         return float(cell)
     except ValueError:
         # Si la conversion échoue, retourner NaN
-        warnings.warn("Warning: all types are not adequate")
         return np.nan
 
 @app.route('/', methods=['GET'])
@@ -58,11 +64,17 @@ def predict():
     
     df_input = df_input.applymap(convert_to_num_or_nan)
 
+    is_valid, message = check_missing_features(df_input, features)
+    
+
+    if not is_valid:
+        return jsonify({'Could not make it' :message})
+    
     df = df_input[features]
-    if df.shape[1] != len(features):
-        missing_columns = len(features) - df.shape[1]
-        return f'{missing_columns} columns are missing in your input'    
+
+  
     #clean the data
+
     df_clean = data_cleaner.transform(df)
 
     #feature engineering and normalisation
