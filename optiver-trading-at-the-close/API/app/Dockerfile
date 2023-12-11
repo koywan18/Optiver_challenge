@@ -17,4 +17,4 @@ EXPOSE 80
 ENV NAME World
 
 # Run gunicorn when the container launches
-CMD ["gunicorn", "--workers", "9", "--bind", "0.0.0.0:80", "app_test:app"]
+CMD ["gunicorn", "app_test:app", "--bind", "0.0.0.0:80", "--workers", "4"]
