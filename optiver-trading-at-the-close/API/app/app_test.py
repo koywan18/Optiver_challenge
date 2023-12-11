@@ -7,6 +7,8 @@ import pandas as pd
 from joblib import load, dump
 import os
 import numpy as np
+import warnings
+
 
 app = Flask(__name__)
 
@@ -28,6 +30,7 @@ def convert_to_num_or_nan(cell):
         return float(cell)
     except ValueError:
         # Si la conversion échoue, retourner NaN
+        warnings.warn("Warning: all types are not adequate")
         return np.nan
 
 @app.route('/', methods=['GET'])
