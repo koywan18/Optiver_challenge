@@ -10,7 +10,9 @@ import numpy as np
 import warnings
 
 
+
 app = Flask(__name__)
+
 
 # Load your CatBoost model
 MODEL_FILEPATH = os.path.join('models', 'usable_model.joblib')
@@ -19,25 +21,36 @@ model = load(MODEL_FILEPATH)
 data_cleaner =  NanHandlerTransformer()
 feature_creator = FeatureCreator()
 scaler = StandardScaler()
+class InvalidInputError(Exception):
+    """ Exception personnalisée pour une entrée invalide. """
+    pass
+
 features = ['stock_id', 'date_id', 'seconds_in_bucket', 'imbalance_size',
        'imbalance_buy_sell_flag', 'reference_price', 'matched_size',
        'far_price', 'near_price', 'bid_price', 'bid_size', 'ask_price',
        'ask_size', 'wap']
 
-def check_missing_features(df_input, features):
-    missing_features = [feature for feature in features if feature not in df_input.columns]
-    if missing_features:
-        return False, f"The following features are missing : {', '.join(missing_features)}"
-    return True, "All necessary features were provided"
-
 
 def convert_to_num_or_nan(cell):
+    # Vérifier si la cellule est déjà un float
+    if isinstance(cell, float):
+        return cell
+
     try:
-        # Essayer de convertir en float
         return float(cell)
-    except ValueError:
-        # Si la conversion échoue, retourner NaN
-        return np.nan
+    except :
+        # Lever une exception si la conversion échoue
+        raise InvalidInputError("Invalid input format")
+    
+
+def validate_json_input(json_data, features):
+    # Iterate over each feature and check if the key exists and is not empty
+    for feature in features:
+        if feature not in json_data:
+            return False, f"Missing value for feature: {feature}"
+        elif json_data[feature] is None or json_data[feature] == '':
+            return False, f" empty value for feature: {feature}"
+    return True, "Valid input"
 
 @app.route('/', methods=['GET'])
 def index():
@@ -46,31 +59,27 @@ def index():
 @app.route('/predict', methods=['POST'])
 def predict():
     content_type = request.content_type
-
-    if 'csv' in content_type:
+    if 'json' not in content_type:
         # If the content type is CSV, read the file using Pandas
-        return "Inputs must me sent under json format"
-    elif 'json' in content_type:
+        return jsonify({'error' :'invalid input'})
+    else:
         # If the content type is JSON, read the JSON data using Pandas
         try:
-            df_input = pd.DataFrame(request.json)
-        except ValueError:
-            try : 
-                df_input = pd.DataFrame([request.json])
-            except:
-                return "Content-Type not supported!"
-    else:
-        return 'Content-Type not supported!'
-    
-    df_input = df_input.applymap(convert_to_num_or_nan)
+            json_data = request.json
+        except:
+            return jsonify({'error' :'invalid input'})
+        is_valid, message = validate_json_input(json_data, features)
+        if not is_valid:
+            return jsonify({'error': message})
 
-    is_valid, message = check_missing_features(df_input, features)
-    
+        df_input = pd.DataFrame([request.json])
 
-    if not is_valid:
-        return jsonify({'Could not make it' :message})
     
     df = df_input[features]
+    try:
+        df_input = df_input.applymap(convert_to_num_or_nan)
+    except InvalidInputError as e:
+        return jsonify({'error' :'invalid input'})
 
   
     #clean the data
